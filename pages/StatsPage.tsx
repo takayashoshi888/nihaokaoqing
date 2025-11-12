@@ -128,15 +128,11 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
       </header>
       <main className="flex-grow p-4 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* FIX: Explicitly pass props to avoid type error with spread operator and key prop. */}
+            {/* FIX: Use spread operator for props for cleaner code and to avoid type error. */}
             {statCards.map(card => (
               <StatCard 
                   key={card.title}
-                  title={card.title}
-                  value={card.value}
-                  unit={card.unit}
-                  icon={card.icon}
-                  colorClass={card.colorClass}
+                  {...card}
               />
             ))}
         </div>

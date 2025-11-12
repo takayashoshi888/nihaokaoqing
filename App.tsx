@@ -69,7 +69,9 @@ const App = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen font-sans">
-      {renderPage()}
+      <div key={activePage} className="page-transition">
+        {renderPage()}
+      </div>
     </div>
   );
 };
