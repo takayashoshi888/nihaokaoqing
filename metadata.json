@@ -1,0 +1,5 @@
+{
+  "name": "中文现场考勤应用 (Chinese Live Attendance App)",
+  "description": "一个现代化的中文现场考勤应用，具有日历打卡、数据统计和AI总结功能。A modern Chinese-language live attendance application with calendar check-ins, data statistics, and AI summaries.",
+  "requestFramePermissions": []
+}
