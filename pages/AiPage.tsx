@@ -31,6 +31,12 @@ const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expen
       if(!query.trim()) return;
       handleGenerateSummary(query);
   }
+
+  const getDayOfWeek = (dateString: string) => {
+    const date = new Date(dateString);
+    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+    return date.toLocaleDateString('ja-JP', { weekday: 'short' });
+  };
   
   const expenseTypeToChinese = (type: ExpenseType) => {
     switch (type) {
@@ -56,13 +62,13 @@ const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expen
 
       // Attendance Records
       printWindow.document.write('<h2>打卡记录</h2>');
-      printWindow.document.write('<table><thead><tr><th>日期</th><th>时间</th></tr></thead><tbody>');
+      printWindow.document.write('<table><thead><tr><th>日期</th><th>曜日</th><th>氏名</th><th>現場名</th><th>时间</th></tr></thead><tbody>');
       const recordsArray: AttendanceRecord[] = Object.values(records);
       recordsArray.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).forEach((rec) => {
-          printWindow.document.write(`<tr><td>${rec.date}</td><td>${rec.time}</td></tr>`);
+          printWindow.document.write(`<tr><td>${rec.date}</td><td>${getDayOfWeek(rec.date)}</td><td>${userData.name}</td><td>${userData.siteName}</td><td>${rec.time}</td></tr>`);
       });
       if (recordsArray.length === 0) {
-        printWindow.document.write('<tr><td colspan="2">无记录</td></tr>');
+        printWindow.document.write('<tr><td colspan="5">无记录</td></tr>');
       }
       printWindow.document.write('</tbody></table>');
 

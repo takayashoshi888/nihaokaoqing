@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, CheckInIcon, TrashIcon } from '../components/Icons';
 import BottomNav from '../components/BottomNav';
-import { AttendanceRecord } from '../types';
+import { AttendanceRecord, UserData } from '../types';
 
 interface AttendanceLogPageProps {
   setActivePage: (page: string) => void;
   records: { [date: string]: AttendanceRecord };
   setRecords: React.Dispatch<React.SetStateAction<{ [date: string]: AttendanceRecord }>>;
+  userData: UserData;
 }
 
-const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({ setActivePage, records, setRecords }) => {
+const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({ setActivePage, records, setRecords, userData }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [notification, setNotification] = useState<string | null>(null);
   const [confirmingCancel, setConfirmingCancel] = useState<string | null>(null);
@@ -76,6 +77,13 @@ const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({ setActivePage, re
     setRecords({});
     setNotification('所有考勤记录已成功清除');
     setShowClearConfirm(false);
+  };
+
+  const getDayOfWeek = (dateString: string) => {
+      const date = new Date(dateString);
+      // Adjust for timezone offset to prevent day shifting when converting from string
+      date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+      return date.toLocaleDateString('ja-JP', { weekday: 'short' });
   };
 
   return (
@@ -158,15 +166,21 @@ const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({ setActivePage, re
                   <span>清理记录</span>
               </button>
             </div>
-            <ul className="max-h-40 overflow-y-auto">
+            <ul className="max-h-60 overflow-y-auto divide-y divide-gray-100">
                 {Object.values(records)
                   .filter((r: AttendanceRecord) => new Date(r.date).getMonth() === currentDate.getMonth())
                   .sort((a: AttendanceRecord, b: AttendanceRecord) => new Date(b.date).getTime() - new Date(a.date).getTime())
                   .map((record: AttendanceRecord) => (
-                      <li key={record.date} className="flex justify-between items-center p-2 border-b">
-                          <span>{record.date}</span>
-                          <span className="text-gray-600">{record.time}</span>
-                          <span className="text-green-600 font-semibold">正常</span>
+                      <li key={record.date} className="p-3 grid grid-cols-3 gap-x-2 items-center">
+                          <div className="col-span-2">
+                              <p className="font-semibold text-gray-800">{`${record.date} (${getDayOfWeek(record.date)})`}</p>
+                              <p className="text-sm text-gray-500 truncate">{`氏名: ${userData.name}`}</p>
+                              <p className="text-sm text-gray-500 truncate">{`現場: ${userData.siteName}`}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-y-2">
+                              <span className="text-gray-700 font-mono text-sm">{record.time}</span>
+                              <span className="text-green-600 font-medium bg-green-100 px-2 py-0.5 rounded-full text-xs">正常</span>
+                          </div>
                       </li>
                   ))
                 }

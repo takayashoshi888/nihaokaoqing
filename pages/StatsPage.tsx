@@ -33,7 +33,8 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
     const today = now.getDate();
 
     // --- Attendance Stats ---
-    const monthlyRecords = allRecords.filter(r => {
+    // FIX: Add explicit type for `r` to resolve type error.
+    const monthlyRecords = allRecords.filter((r: AttendanceRecord) => {
         const recordDate = new Date(r.date);
         return recordDate.getFullYear() === year && recordDate.getMonth() === month;
     });
@@ -75,8 +76,9 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
     );
     
     // --- Recent Activity ---
+    // FIX: Add explicit types for `a` and `b` to resolve type error.
     const recentActivity = allRecords
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a: AttendanceRecord, b: AttendanceRecord) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5);
 
     return {
@@ -126,7 +128,17 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
       </header>
       <main className="flex-grow p-4 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {statCards.map(card => <StatCard key={card.title} {...card} />)}
+            {/* FIX: Explicitly pass props to avoid type error with spread operator and key prop. */}
+            {statCards.map(card => (
+              <StatCard 
+                  key={card.title}
+                  title={card.title}
+                  value={card.value}
+                  unit={card.unit}
+                  icon={card.icon}
+                  colorClass={card.colorClass}
+              />
+            ))}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

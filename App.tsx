@@ -53,7 +53,7 @@ const App = () => {
       case 'management':
         return <ManagementPage userData={userData} onLogout={handleLogout} setActivePage={setActivePage} />;
       case 'attendanceLog':
-        return <AttendanceLogPage setActivePage={setActivePage} records={records} setRecords={setRecords} />;
+        return <AttendanceLogPage setActivePage={setActivePage} records={records} setRecords={setRecords} userData={userData} />;
       case 'ai':
         return <AiPage setActivePage={setActivePage} userData={userData} records={records} expenses={expenses} />;
       case 'stats':
