@@ -147,7 +147,7 @@ const ExpenseManagementPage: React.FC<ExpenseManagementPageProps> = ({ setActive
         <h1 className="page-title">费用管理</h1>
       </header>
 
-      <main className="flex-grow p-4 space-y-4">
+      <main className="flex-grow p-4 md:p-6 lg:p-8 space-y-4">
         {/* Monthly Summary */}
         <div className="card">
           <div className="flex items-center space-x-2 mb-3">

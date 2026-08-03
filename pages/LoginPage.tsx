@@ -46,7 +46,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onViewData, savedUserDat
           <h1 className="text-xl font-bold text-center text-white drop-shadow-lg" style={{ fontFamily: "'Poppins', sans-serif" }}>现场出勤管理</h1>
         </header>
         <main className="flex-grow flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-md backdrop-blur-xl rounded-3xl shadow-2xl p-8 space-y-6 border border-white/20"
+          <div className="w-full max-w-md md:max-w-lg backdrop-blur-xl rounded-3xl shadow-2xl p-8 space-y-6 border border-white/20"
             style={{ backgroundColor: 'var(--theme-modal-card, rgba(255,255,255,0.9))' }}>
             <h2 className="text-center text-2xl font-bold" style={{ fontFamily: "'Poppins', sans-serif", color: 'var(--theme-foreground)' }}>用户信息设置</h2>
             <p className="text-center text-sm -mt-4" style={{ color: 'var(--theme-muted)' }}>请输入您的信息以开始出勤</p>

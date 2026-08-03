@@ -89,7 +89,7 @@ const AttendanceLogPage: React.FC<AttendanceLogPageProps> = ({ setActivePage, re
         <h1 className="page-title">打卡日历</h1>
       </header>
       
-      <main className="flex-grow p-4">
+      <main className="flex-grow p-4 md:p-6 lg:p-8">
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <button onClick={handlePrevMonth} className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-surface-alt transition-colors duration-200" aria-label="上个月">

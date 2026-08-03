@@ -172,12 +172,13 @@
   --theme-shadow-hover: rgba(96, 165, 250, 0.35);
 }
 
-/* ===== App shell (mobile-first; desktop = centered phone frame) ===== */
+/* ===== App shell (mobile-first; desktop = standard web content width) ===== */
 :root {
-  --app-max-width: 430px;
+  /* Typical SaaS / dashboard content width (~72rem) */
+  --app-max-width: 1152px;
 }
 
-/* Outer canvas — full viewport; on desktop shows side gutters */
+/* Outer canvas — full viewport; side gutters on wide screens */
 .app-viewport {
   min-height: 100dvh;
   min-height: 100vh;
@@ -185,7 +186,7 @@
   color: var(--theme-foreground);
 }
 
-/* Inner app column — full width on phone; capped + centered on desktop */
+/* Main content column — full width on phone; capped + centered on desktop */
 .app-shell {
   position: relative;
   width: 100%;
@@ -195,23 +196,17 @@
   background-color: var(--theme-surface);
 }
 
-/* Desktop / large tablet: constrain UI so it doesn't stretch across monitors */
+/* Tablet and up: readable web-app width, not edge-to-edge on ultrawide */
 @media (min-width: 768px) {
   .app-viewport {
     display: flex;
     justify-content: center;
     align-items: stretch;
-    /* Soft outer canvas so the phone frame stands out */
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 0%, var(--theme-primary-100) 0%, transparent 55%),
-      linear-gradient(180deg, var(--theme-surface-alt) 0%, var(--theme-surface) 40%, var(--theme-surface-alt) 100%);
-    padding: 0;
+    background-color: var(--theme-surface-alt);
   }
 
   [data-theme="dark"] .app-viewport {
-    background:
-      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(59, 130, 246, 0.12) 0%, transparent 55%),
-      linear-gradient(180deg, #0b1220 0%, #0f172a 50%, #0b1220 100%);
+    background-color: #0b1220;
   }
 
   .app-shell {
@@ -223,33 +218,26 @@
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
-    /* Contain position:fixed descendants so nav/FAB/modals stay in-frame */
+    /* Contain position:fixed descendants (nav / FAB / modals) within shell */
     transform: translateZ(0);
     -webkit-overflow-scrolling: touch;
+    /* Subtle side separation from gutters — web app, not phone frame */
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--theme-border) 80%, transparent),
-      0 25px 50px -12px rgba(15, 23, 42, 0.18),
-      0 0 80px -20px var(--theme-shadow);
+      -1px 0 0 color-mix(in srgb, var(--theme-border) 90%, transparent),
+      1px 0 0 color-mix(in srgb, var(--theme-border) 90%, transparent);
   }
 
   [data-theme="dark"] .app-shell {
     box-shadow:
-      0 0 0 1px var(--theme-border),
-      0 25px 60px -12px rgba(0, 0, 0, 0.55),
-      0 0 80px -20px var(--theme-shadow);
+      -1px 0 0 var(--theme-border),
+      1px 0 0 var(--theme-border);
   }
+}
 
-  /* Extra breathing room on very wide screens */
-  @media (min-width: 1280px) {
-    .app-viewport {
-      padding-block: 12px;
-    }
-    .app-shell {
-      height: calc(100dvh - 24px);
-      height: calc(100vh - 24px);
-      min-height: calc(100dvh - 24px);
-      border-radius: 1.25rem;
-    }
+/* Large desktop: keep the same comfortable content width */
+@media (min-width: 1280px) {
+  :root {
+    --app-max-width: 1200px;
   }
 }
 
@@ -335,8 +323,6 @@
     @apply fixed bottom-24 right-5 text-white w-14 h-14 rounded-2xl flex items-center justify-center z-30 transition-all duration-200;
     background-color: var(--theme-primary-600);
     box-shadow: 0 4px 14px 0 var(--theme-shadow);
-    /* On desktop, shell transform already contains fixed; keep within frame */
-    max-width: calc(var(--app-max-width) - 2.5rem);
   }
   .btn-fab:hover {
     background-color: var(--theme-primary-700);
@@ -382,10 +368,15 @@
   [data-theme="dark"] .input-field:focus { --theme-input-focus-bg: #1e293b; }
 
   .page-header {
-    @apply p-4 sticky top-0 z-10;
+    @apply p-4 md:px-6 lg:px-8 sticky top-0 z-10;
     background-color: var(--theme-header-bg, rgba(255,255,255,0.8));
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--theme-border);
+  }
+
+  /* Shared horizontal padding for main page content on wider screens */
+  .page-content {
+    @apply p-4 md:p-6 lg:p-8;
   }
   [data-theme="dark"] .page-header { --theme-header-bg: rgba(15,23,42,0.85); }
 

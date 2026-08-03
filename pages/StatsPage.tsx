@@ -126,7 +126,7 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
       <header className="page-header">
         <h1 className="page-title">数据统计</h1>
       </header>
-      <main className="flex-grow p-4 space-y-4">
+      <main className="flex-grow p-4 md:p-6 lg:p-8 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {statCards.map(card => (
               <StatCard 

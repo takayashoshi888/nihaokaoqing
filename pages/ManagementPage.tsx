@@ -127,9 +127,9 @@ const ManagementPage: React.FC<ManagementPageProps> = ({ userData, onLogout, set
           </div>
         </header>
 
-        <main className="flex-grow p-4">
+        <main className="flex-grow p-4 md:p-6 lg:p-8">
           <h2 className="section-title">功能菜单</h2>
-          <div className="grid grid-cols-2 gap-4 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
             {menuItems.map((item) => (
               <button
                 key={item.name}

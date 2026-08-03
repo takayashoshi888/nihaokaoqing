@@ -101,7 +101,7 @@ const SiteSettingsPage: React.FC<SiteSettingsPageProps> = ({
         <h1 className="page-title">现场设置</h1>
       </header>
 
-      <main className="flex-grow p-4">
+      <main className="flex-grow p-4 md:p-6 lg:p-8">
         <div className="relative mb-4">
           <input
             type="text"

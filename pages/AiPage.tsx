@@ -76,7 +76,7 @@ const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expen
         <h1 className="page-title">AI 助手</h1>
       </header>
 
-      <main className="flex-grow p-4">
+      <main className="flex-grow p-4 md:p-6 lg:p-8">
         {/* Query Section */}
         <div className="card mb-4">
           <div className="flex items-center mb-3">
