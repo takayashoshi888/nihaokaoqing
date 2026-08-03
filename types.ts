@@ -17,3 +17,11 @@ export interface ExpenseRecord {
   amount: number;
   description?: string;
 }
+
+/** Multi-site support: a stored site entry */
+export interface SavedSite {
+  id: string;          // unique id (timestamp)
+  name: string;        // user name for this site
+  siteName: string;    // construction site name
+  createdAt: string;   // ISO date string
+}

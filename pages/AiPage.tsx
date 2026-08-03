@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { generateAiSummary } from '../services/geminiService';
 import { UserData, AttendanceRecord, ExpenseRecord } from '../types';
 import { AiIcon, DocumentIcon, PdfIcon, ShareIcon } from '../components/Icons';
-import BottomNav from '../components/BottomNav';
 import { expenseTypeToChinese, getDayOfWeek } from '../utils/helpers';
+import { buildReportHtml } from '../utils/reportGenerator';
+import BottomNav from '../components/BottomNav';
 
 interface AiPageProps {
   setActivePage: (page: string) => void;
@@ -13,175 +14,148 @@ interface AiPageProps {
 }
 
 const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expenses }) => {
-  const [query, setQuery] = useState('');
-  const [summary, setSummary] = useState('');
+  const [userQuery, setUserQuery] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const handleGenerateSummary = async (userQuery = "请总结一下本月的考勤和费用情况。") => {
+  const handleAiQuery = async () => {
+    if (!userQuery.trim()) return;
     setIsLoading(true);
-    setSummary('');
-    const recordsArray: AttendanceRecord[] = Object.values(records);
-    const expensesArray: ExpenseRecord[] = expenses;
-    const result = await generateAiSummary(userData, recordsArray, expensesArray, userQuery);
-    setSummary(result);
-    setIsLoading(false);
+    setAiSummary('');
+    try {
+      const recordsArray = Object.values(records);
+      const summary = await generateAiSummary(userData, recordsArray, expenses, userQuery);
+      setAiSummary(summary);
+    } catch {
+      setAiSummary('AI 分析请求失败，请检查网络连接或 API 密钥。');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleQuerySubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if(!query.trim()) return;
-      handleGenerateSummary(query);
-  }
-
   const handleExportPdf = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    if (printWindow) {
-      printWindow.document.write('<html><head><title>考勤与费用报告</title>');
-      printWindow.document.write('<style>body{font-family: sans-serif; margin: 20px;} h1, h2{color: #333;} table{width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 30px;} th, td{border: 1px solid #ddd; padding: 8px; text-align: left;} th{background-color: #f2f2f2;} .summary{background-color: #eef; padding: 15px; border-radius: 5px; margin-bottom: 20px;} .total{font-weight: bold; text-align: right;}</style>');
-      printWindow.document.write('</head><body>');
-      printWindow.document.write(`<h1>考勤与费用报告 - ${userData.name}</h1>`);
-      printWindow.document.write(`<p><b>现场:</b> ${userData.siteName}</p>`);
-      if(summary) {
-        printWindow.document.write('<h2>AI 总结</h2>');
-        printWindow.document.write(`<div class="summary">${summary.replace(/\n/g, '<br>')}</div>`);
-      }
-
-      // Attendance Records
-      printWindow.document.write('<h2>打卡记录</h2>');
-      printWindow.document.write('<table><thead><tr><th>日期</th><th>曜日</th><th>氏名</th><th>現場名</th><th>时间</th></tr></thead><tbody>');
-      const recordsArray: AttendanceRecord[] = Object.values(records);
-      recordsArray.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).forEach((rec) => {
-          printWindow.document.write(`<tr><td>${rec.date}</td><td>${getDayOfWeek(rec.date)}</td><td>${userData.name}</td><td>${userData.siteName}</td><td>${rec.time}</td></tr>`);
-      });
-      if (recordsArray.length === 0) {
-        printWindow.document.write('<tr><td colspan="5">无记录</td></tr>');
-      }
-      printWindow.document.write('</tbody></table>');
-
-      // Expense Records
-      printWindow.document.write('<h2>费用报销单</h2>');
-      printWindow.document.write('<table><thead><tr><th>日期</th><th>类型</th><th>金额 (円)</th><th>备注</th></tr></thead><tbody>');
-      let totalExpense = 0;
-      const currentMonthExpenses = expenses.filter(e => new Date(e.date).getMonth() === new Date().getMonth());
-      currentMonthExpenses.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).forEach((exp) => {
-          printWindow.document.write(`<tr><td>${exp.date}</td><td>${expenseTypeToChinese(exp.type)}</td><td>${exp.amount.toFixed(0)}</td><td>${exp.description || ''}</td></tr>`);
-          totalExpense += exp.amount;
-      });
-       if (currentMonthExpenses.length === 0) {
-        printWindow.document.write('<tr><td colspan="4">无记录</td></tr>');
-      } else {
-        printWindow.document.write(`<tr><td colspan="2" class="total">本月总计:</td><td colspan="2">${totalExpense.toFixed(0)} 円</td></tr>`);
-      }
-      printWindow.document.write('</tbody></table>');
-
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
+    const html = buildReportHtml(userData, records, expenses, aiSummary);
+    const blob = new Blob(['\uFEFF' + html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+    if (!printWindow) {
+      alert('请允许弹出窗口以导出 PDF');
+      URL.revokeObjectURL(url);
+      return;
     }
-  }
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.onafterprint = () => {
+        printWindow.close();
+        URL.revokeObjectURL(url);
+      };
+    };
+  };
+
+  const handleDownloadHtml = () => {
+    const html = buildReportHtml(userData, records, expenses, aiSummary);
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `考勤报告_${userData.siteName}_${new Date().toISOString().slice(0, 10)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const quickPrompts = [
+    '本月出勤率和费用汇总',
+    '哪些方面需要优化？',
+    '生成一份月度报告分析',
+  ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col pb-16">
-      {/* Page Header */}
+    <div className="min-h-screen flex flex-col pb-16" style={{ backgroundColor: 'var(--theme-surface)' }}>
       <header className="page-header">
-        <h1 className="page-title">AI 助手 &amp; 导出</h1>
+        <h1 className="page-title">AI 助手</h1>
       </header>
 
-      <main className="flex-grow p-4 space-y-4">
-        {/* Intelligent Query Card */}
-        <div className="card">
-          <h2 className="section-title">智能查询</h2>
-          <form onSubmit={handleQuerySubmit} className="flex space-x-2 mt-2">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="询问关于考勤或费用的问题..."
-              className="input-field flex-grow"
-            />
-            <button type="submit" className="btn-primary shrink-0" disabled={isLoading}>
-              查询
-            </button>
-          </form>
-          {/* Quick Suggestion Chips */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            <button
-              onClick={() => handleGenerateSummary("本月出勤几天？")}
-              className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
-              style={{ color: 'var(--theme-primary-600)', backgroundColor: 'var(--theme-primary-50)' }}
-            >
-              本月出勤几天？
-            </button>
-            <button
-              onClick={() => handleGenerateSummary("本月花了多少交通费？")}
-              className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
-              style={{ color: 'var(--theme-accent-600)', backgroundColor: 'var(--theme-accent-50)' }}
-            >
-              本月交通费？
-            </button>
-            <button
-              onClick={() => handleGenerateSummary("本月有没有异常打卡？")}
-              className="px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 rounded-full hover:bg-amber-100 transition-colors"
-            >
-              异常打卡？
-            </button>
-          </div>
-        </div>
-
-        {/* AI Reply Card */}
-        <div className="card min-h-[150px]">
+      <main className="flex-grow p-4">
+        {/* Query Section */}
+        <div className="card mb-4">
           <div className="flex items-center mb-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2"
-              style={{ backgroundColor: 'var(--theme-primary-50)' }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2" style={{ backgroundColor: 'var(--theme-primary-50)' }}>
               <AiIcon className="w-5 h-5" style={{ color: 'var(--theme-primary-600)' }} />
             </div>
-            <h2 className="section-title !mb-0">AI 回复</h2>
+            <h3 className="font-semibold" style={{ fontFamily: 'Poppins, sans-serif', color: 'var(--theme-foreground)' }}>AI 分析</h3>
+          </div>
+          <textarea
+            className="input-field resize-none mb-3"
+            rows={3}
+            value={userQuery}
+            onChange={(e) => setUserQuery(e.target.value)}
+            placeholder="输入你的问题，例如：本月出勤率和费用汇总…"
+          />
+          <div className="flex flex-wrap gap-2 mb-3">
+            {quickPrompts.map((p) => (
+              <button
+                key={p}
+                onClick={() => setUserQuery(p)}
+                className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
+                style={{ color: 'var(--theme-accent-600)', backgroundColor: 'var(--theme-accent-50)' }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <button onClick={handleAiQuery} disabled={isLoading || !userQuery.trim()} className="btn-primary w-full">
+            {isLoading ? '分析中…' : '提交查询'}
+          </button>
+        </div>
+
+        {/* AI Reply */}
+        <div className="card mb-4">
+          <div className="flex items-center mb-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2" style={{ backgroundColor: 'var(--theme-primary-50)' }}>
+              <DocumentIcon className="w-5 h-5" style={{ color: 'var(--theme-primary-600)' }} />
+            </div>
+            <h3 className="font-semibold" style={{ fontFamily: 'Poppins, sans-serif', color: 'var(--theme-foreground)' }}>分析结果</h3>
           </div>
           {isLoading ? (
             <div className="flex items-center space-x-2 py-4">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 rounded-full animate-bounce"
+              <span className="w-2 h-2 rounded-full animate-bounce"
                 style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '0ms' }} />
-                <div className="w-2 h-2 rounded-full animate-bounce"
+              <span className="w-2 h-2 rounded-full animate-bounce"
                 style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '150ms' }} />
-                <div className="w-2 h-2 rounded-full animate-bounce"
+              <span className="w-2 h-2 rounded-full animate-bounce"
                 style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '300ms' }} />
-              </div>
-              <span className="text-sm text-gray-400 ml-2">AI 正在思考...</span>
+              <span className="text-sm ml-2" style={{ color: 'var(--theme-muted)' }}>AI 正在思考…</span>
             </div>
+          ) : aiSummary ? (
+            <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--theme-foreground)' }}>{aiSummary}</p>
           ) : (
-            <div className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">
-              {summary || '请开始查询或生成总结。'}
-            </div>
+            <p className="text-sm py-4" style={{ color: 'var(--theme-muted)' }}>输入问题开始分析</p>
           )}
         </div>
 
-        <div className="divider">
-          <span className="text-xs text-gray-400">快速操作</span>
-        </div>
-
-        {/* Action Buttons Card */}
+        {/* Export */}
         <div className="card">
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => handleGenerateSummary()}
-              className="btn-primary flex items-center justify-center space-x-2"
-              disabled={isLoading}
-            >
-              <DocumentIcon className="w-5 h-5" />
-              <span>AI 总结</span>
+          <h3 className="font-semibold mb-3" style={{ fontFamily: 'Poppins, sans-serif', color: 'var(--theme-foreground)' }}>导出报告</h3>
+          <p className="text-xs mb-4" style={{ color: 'var(--theme-muted)' }}>
+            点击下方按钮导出 PDF 报告（通过浏览器打印另存为 PDF）或下载 HTML 文件。
+          </p>
+          <div className="divider mb-4" />
+          <div className="flex gap-3">
+            <button onClick={handleExportPdf} className="btn-primary flex-1 flex items-center justify-center gap-2">
+              <PdfIcon className="w-4 h-4" />
+              导出 PDF
             </button>
-            <button
-              onClick={handleExportPdf}
-              className="btn-accent flex items-center justify-center space-x-2"
-            >
-              <PdfIcon className="w-5 h-5" />
-              <span>导出 PDF</span>
+            <button onClick={handleDownloadHtml} className="btn-accent flex-1 flex items-center justify-center gap-2">
+              <ShareIcon className="w-4 h-4" />
+              下载 HTML
             </button>
           </div>
         </div>
       </main>
+
+      {/* Hidden iframe for print - ensures proper rendering */}
+      <iframe ref={iframeRef} style={{ display: 'none' }} title="print-frame" />
 
       <BottomNav activePage="ai" setActivePage={setActivePage} />
     </div>
