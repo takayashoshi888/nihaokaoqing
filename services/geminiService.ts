@@ -2,13 +2,15 @@
 import { GoogleGenAI } from "@google/genai";
 import { AttendanceRecord, UserData, ExpenseRecord } from '../types';
 
+const API_KEY = (typeof process !== 'undefined' && process.env?.API_KEY) || '';
+
 export const generateAiSummary = async (userData: UserData, records: AttendanceRecord[], expenses: ExpenseRecord[], userQuery: string): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "错误：API密钥未配置。请确保您的环境中已设置API_KEY。";
+  if (!API_KEY) {
+    return "错误：API密钥未配置。请确保 .env 文件中已设置 GEMINI_API_KEY。";
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
     
     const recordsText = records.length > 0
       ? records.map(r => `${r.date} at ${r.time}`).join('\n')

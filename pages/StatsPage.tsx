@@ -9,15 +9,15 @@ interface StatsPageProps {
   expenses: ExpenseRecord[];
 }
 
-const StatCard = ({ icon, title, value, unit, colorClass }: { icon: React.ReactNode, title: string, value: string | number, unit: string, colorClass: string }) => (
-    <div className={`bg-white p-4 rounded-lg shadow flex items-start space-x-4`}>
-        <div className={`p-3 rounded-full ${colorClass}`}>
+const StatCard = ({ icon, title, value, unit, colorClass }: { icon: React.ReactNode; title: string; value: string | number; unit: string; colorClass: string; key?: React.Key }) => (
+    <div className="card flex items-start space-x-4 !p-4">
+        <div className={`p-3 rounded-2xl ${colorClass}`}>
             {icon}
         </div>
         <div>
-            <p className="text-sm text-gray-500">{title}</p>
-            <p className="text-2xl font-bold text-gray-800">
-                {value} <span className="text-base font-normal">{unit}</span>
+            <p className="text-sm text-muted font-medium">{title}</p>
+            <p className="text-2xl font-bold text-foreground font-heading">
+                {value} <span className="text-base font-normal text-muted">{unit}</span>
             </p>
         </div>
     </div>
@@ -92,19 +92,19 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
   }, [records, expenses]);
 
   const statCards = [
-    { title: '本月出勤', value: stats.totalCheckInsThisMonth, unit: '天', icon: <CalendarIcon className="w-6 h-6 text-blue-600"/>, colorClass: 'bg-blue-100' },
-    { title: '本月总费用', value: stats.expenseTotals.total.toFixed(0), unit: '円', icon: <WalletIcon className="w-6 h-6 text-green-600"/>, colorClass: 'bg-green-100' },
-    { title: '出勤率 (工作日)', value: stats.attendanceRate, unit: '%', icon: <ChartIcon className="w-6 h-6 text-orange-600"/>, colorClass: 'bg-orange-100' },
+    { title: '本月出勤', value: stats.totalCheckInsThisMonth, unit: '天', icon: <CalendarIcon className="w-6 h-6 text-primary-600"/>, colorClass: 'bg-primary-50' },
+    { title: '本月总费用', value: stats.expenseTotals.total.toFixed(0), unit: '円', icon: <WalletIcon className="w-6 h-6 text-accent-600"/>, colorClass: 'bg-accent-50' },
+    { title: '出勤率 (工作日)', value: stats.attendanceRate, unit: '%', icon: <ChartIcon className="w-6 h-6 text-orange-600"/>, colorClass: 'bg-orange-50' },
   ];
   
   const expenseCategories = [
-      { name: '交通费', value: stats.expenseTotals.transportation, color: 'bg-blue-500' },
-      { name: '高速费', value: stats.expenseTotals.toll, color: 'bg-green-500' },
-      { name: '停车费', value: stats.expenseTotals.parking, color: 'bg-yellow-500' },
+      { name: '交通费', value: stats.expenseTotals.transportation, color: 'bg-primary-500' },
+      { name: '高速费', value: stats.expenseTotals.toll, color: 'bg-accent-500' },
+      { name: '停车费', value: stats.expenseTotals.parking, color: 'bg-amber-500' },
   ];
   
   const getConicGradient = () => {
-      if (stats.expenseTotals.total === 0) return 'rgb(229, 231, 235)';
+      if (stats.expenseTotals.total === 0) return '#E4ECFC';
       
       const tPercent = (stats.expenseTotals.transportation / stats.expenseTotals.total) * 100;
       const oPercent = (stats.expenseTotals.toll / stats.expenseTotals.total) * 100;
@@ -112,35 +112,39 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
       let gradient = 'conic-gradient(';
       let currentPercentage = 0;
       
-      gradient += `#3b82f6 0% ${tPercent}%, `;
+      gradient += `var(--theme-primary-600) 0% ${tPercent}%, `;
       currentPercentage += tPercent;
-      gradient += `#22c55e ${currentPercentage}% ${currentPercentage + oPercent}%, `;
+      gradient += `var(--theme-accent-600) ${currentPercentage}% ${currentPercentage + oPercent}%, `;
       currentPercentage += oPercent;
-      gradient += `#eab308 ${currentPercentage}% 100%)`;
+      gradient += `#f59e0b ${currentPercentage}% 100%)`;
 
       return gradient;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col pb-16">
-      <header className="bg-white shadow-md p-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-center text-gray-800">数据统计</h1>
+    <div className="min-h-screen bg-surface flex flex-col pb-16">
+      <header className="page-header">
+        <h1 className="page-title">数据统计</h1>
       </header>
-      <main className="flex-grow p-4 space-y-6">
+      <main className="flex-grow p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* FIX: Use spread operator for props for cleaner code and to avoid type error. */}
             {statCards.map(card => (
               <StatCard 
                   key={card.title}
-                  {...card}
+                  title={card.title}
+                  value={card.value}
+                  unit={card.unit}
+                  icon={card.icon}
+                  colorClass={card.colorClass}
               />
             ))}
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3 bg-white p-4 rounded-lg shadow">
-                <h3 className="font-semibold text-gray-700 mb-4">本月出勤概览</h3>
-                <div className="grid grid-cols-7 gap-1 text-center text-sm text-gray-500 mb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* Calendar Heatmap */}
+            <div className="lg:col-span-3 card">
+                <h3 className="section-title">本月出勤概览</h3>
+                <div className="grid grid-cols-7 gap-1 text-center text-sm text-muted mb-2 font-medium">
                     {['日', '一', '二', '三', '四', '五', '六'].map(day => <div key={day}>{day}</div>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1.5">
@@ -152,14 +156,14 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
                         const isCheckedIn = !!records[dateString];
                         const isToday = day.getDate() === stats.today;
                         
-                        let dayClass = 'w-full aspect-square flex items-center justify-center rounded-md text-xs';
+                        let dayClass = 'w-full aspect-square flex items-center justify-center rounded-xl text-xs font-medium transition-all duration-200';
                         if(isCheckedIn) {
-                            dayClass += ' bg-green-500 text-white font-bold';
+                            dayClass += ' bg-accent-500 text-white font-bold shadow-sm shadow-accent-500/20';
                         } else {
-                            dayClass += ' bg-gray-100 text-gray-600';
+                            dayClass += ' bg-surface-alt text-muted';
                         }
                         if (isToday) {
-                            dayClass += ' ring-2 ring-blue-500 ring-offset-1';
+                            dayClass += ' ring-2 ring-primary-500 ring-offset-2';
                         }
                         
                         return <div key={dateString} className={dayClass}>{day.getDate()}</div>
@@ -167,24 +171,27 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
                 </div>
             </div>
 
-            <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow">
-                <h3 className="font-semibold text-gray-700 mb-4">本月费用构成</h3>
+            {/* Donut Chart */}
+            <div className="lg:col-span-2 card">
+                <h3 className="section-title">本月费用构成</h3>
                 {stats.expenseTotals.total > 0 ? (
                     <div className="flex items-center space-x-4">
                         <div className="relative w-32 h-32 flex-shrink-0">
                             <div className="w-full h-full rounded-full" style={{ background: getConicGradient() }}></div>
                             <div className="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center">
-                                <span className="text-xs text-gray-500">总计</span>
-                                <span className="font-bold text-lg text-gray-800">{stats.expenseTotals.total.toFixed(0)}</span>
-                                <span className="text-xs text-gray-500">円</span>
+                                <span className="text-xs text-muted">总计</span>
+                                <span className="font-bold text-lg text-foreground font-heading">{stats.expenseTotals.total.toFixed(0)}</span>
+                                <span className="text-xs text-muted">円</span>
                             </div>
                         </div>
-                        <ul className="space-y-2 text-sm">
+                        <ul className="space-y-2.5 text-sm flex-1">
                             {expenseCategories.map(cat => (
-                                <li key={cat.name} className="flex items-center">
-                                    <span className={`w-3 h-3 rounded-full mr-2 ${cat.color}`}></span>
-                                    <span className="text-gray-600 w-16">{cat.name}</span>
-                                    <span className="font-semibold text-gray-800">
+                                <li key={cat.name} className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <span className={`w-3 h-3 rounded-full ${cat.color}`}></span>
+                                        <span className="text-muted">{cat.name}</span>
+                                    </div>
+                                    <span className="font-semibold text-foreground">
                                         {((cat.value / stats.expenseTotals.total) * 100 || 0).toFixed(0)}%
                                     </span>
                                 </li>
@@ -193,31 +200,34 @@ const StatsPage: React.FC<StatsPageProps> = ({ setActivePage, records, expenses 
                     </div>
                 ) : (
                     <div className="flex items-center justify-center h-32">
-                        <p className="text-center text-gray-500">本月暂无费用数据</p>
+                        <p className="text-center text-muted">本月暂无费用数据</p>
                     </div>
                 )}
             </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="font-semibold text-gray-700 mb-2">最近活动</h3>
+        {/* Recent Activity */}
+        <div className="card">
+            <h3 className="section-title">最近活动</h3>
             {stats.recentActivity.length > 0 ? (
-                <ul className="space-y-2">
-                    {stats.recentActivity.map(record => (
-                        <li key={record.date} className="flex justify-between items-center p-2 border-b last:border-b-0">
+                <ul className="space-y-1">
+                    {stats.recentActivity.map((record, idx) => (
+                        <li key={record.date} className={`flex justify-between items-center py-3 ${idx !== 0 ? 'border-t border-border/30' : ''}`}>
                             <div className="flex items-center space-x-3">
-                                <ClockIcon className="w-5 h-5 text-gray-400" />
+                                <div className="p-2 bg-surface-alt rounded-2xl">
+                                    <ClockIcon className="w-4 h-4 text-muted" />
+                                </div>
                                 <div>
-                                    <p className="font-medium text-gray-800">{record.date}</p>
-                                    <p className="text-xs text-gray-500">{record.time}</p>
+                                    <p className="font-medium text-foreground">{record.date}</p>
+                                    <p className="text-xs text-muted">{record.time}</p>
                                 </div>
                             </div>
-                            <span className="text-sm text-green-600 font-medium bg-green-100 px-2 py-1 rounded-full">已打卡</span>
+                            <span className="badge-success">已打卡</span>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p className="text-center text-gray-500 py-4">暂无打卡记录</p>
+                <p className="text-center text-muted py-4">暂无打卡记录</p>
             )}
         </div>
       </main>

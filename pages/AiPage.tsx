@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { generateAiSummary } from '../services/geminiService';
-import { UserData, AttendanceRecord, ExpenseRecord, ExpenseType } from '../types';
+import { UserData, AttendanceRecord, ExpenseRecord } from '../types';
 import { AiIcon, DocumentIcon, PdfIcon, ShareIcon } from '../components/Icons';
 import BottomNav from '../components/BottomNav';
+import { expenseTypeToChinese, getDayOfWeek } from '../utils/helpers';
 
 interface AiPageProps {
   setActivePage: (page: string) => void;
@@ -25,28 +26,13 @@ const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expen
     setSummary(result);
     setIsLoading(false);
   };
-  
+
   const handleQuerySubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if(!query.trim()) return;
       handleGenerateSummary(query);
   }
 
-  const getDayOfWeek = (dateString: string) => {
-    const date = new Date(dateString);
-    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-    return date.toLocaleDateString('ja-JP', { weekday: 'short' });
-  };
-  
-  const expenseTypeToChinese = (type: ExpenseType) => {
-    switch (type) {
-      case 'transportation': return '交通费';
-      case 'toll': return '高速费';
-      case 'parking': return '停车费';
-      default: return '未知费用';
-    }
-  };
-  
   const handleExportPdf = () => {
     const printWindow = window.open('', '', 'height=600,width=800');
     if (printWindow) {
@@ -96,56 +82,102 @@ const AiPage: React.FC<AiPageProps> = ({ setActivePage, userData, records, expen
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col pb-16">
-      <header className="bg-white shadow-md p-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-center text-gray-800">AI 助手 & 导出</h1>
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col pb-16">
+      {/* Page Header */}
+      <header className="page-header">
+        <h1 className="page-title">AI 助手 &amp; 导出</h1>
       </header>
 
       <main className="flex-grow p-4 space-y-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="font-semibold text-gray-700 mb-2">智能查询</h2>
-          <form onSubmit={handleQuerySubmit} className="flex space-x-2">
+        {/* Intelligent Query Card */}
+        <div className="card">
+          <h2 className="section-title">智能查询</h2>
+          <form onSubmit={handleQuerySubmit} className="flex space-x-2 mt-2">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="询问关于考勤或费用的问题..."
-              className="flex-grow p-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              className="input-field flex-grow"
             />
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400" disabled={isLoading}>
+            <button type="submit" className="btn-primary shrink-0" disabled={isLoading}>
               查询
             </button>
           </form>
-          <div className="flex space-x-2 mt-2">
-            <button onClick={() => handleGenerateSummary("本月出勤几天？")} className="text-xs bg-gray-200 px-2 py-1 rounded-full hover:bg-gray-300">本月出勤几天？</button>
-            <button onClick={() => handleGenerateSummary("本月花了多少交通费？")} className="text-xs bg-gray-200 px-2 py-1 rounded-full hover:bg-gray-300">交通费？</button>
+          {/* Quick Suggestion Chips */}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
+              onClick={() => handleGenerateSummary("本月出勤几天？")}
+              className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
+              style={{ color: 'var(--theme-primary-600)', backgroundColor: 'var(--theme-primary-50)' }}
+            >
+              本月出勤几天？
+            </button>
+            <button
+              onClick={() => handleGenerateSummary("本月花了多少交通费？")}
+              className="px-3 py-1.5 text-xs font-medium rounded-full transition-colors"
+              style={{ color: 'var(--theme-accent-600)', backgroundColor: 'var(--theme-accent-50)' }}
+            >
+              本月交通费？
+            </button>
+            <button
+              onClick={() => handleGenerateSummary("本月有没有异常打卡？")}
+              className="px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 rounded-full hover:bg-amber-100 transition-colors"
+            >
+              异常打卡？
+            </button>
           </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow min-h-[150px]">
-            <div className="flex items-center mb-2">
-                <AiIcon className="w-6 h-6 text-blue-600 mr-2"/>
-                <h2 className="font-semibold text-gray-700">AI 回复</h2>
+
+        {/* AI Reply Card */}
+        <div className="card min-h-[150px]">
+          <div className="flex items-center mb-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center mr-2"
+              style={{ backgroundColor: 'var(--theme-primary-50)' }}>
+              <AiIcon className="w-5 h-5" style={{ color: 'var(--theme-primary-600)' }} />
             </div>
-            {isLoading ? (
-                <div className="flex justify-center items-center h-24">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-            ) : (
-                <div className="text-gray-600 whitespace-pre-wrap prose prose-sm max-w-none">{summary || '请开始查询或生成总结。'}</div>
-            )}
+            <h2 className="section-title !mb-0">AI 回复</h2>
+          </div>
+          {isLoading ? (
+            <div className="flex items-center space-x-2 py-4">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 rounded-full animate-bounce"
+                style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '0ms' }} />
+                <div className="w-2 h-2 rounded-full animate-bounce"
+                style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '150ms' }} />
+                <div className="w-2 h-2 rounded-full animate-bounce"
+                style={{ backgroundColor: 'var(--theme-primary-600)', animationDelay: '300ms' }} />
+              </div>
+              <span className="text-sm text-gray-400 ml-2">AI 正在思考...</span>
+            </div>
+          ) : (
+            <div className="text-gray-600 whitespace-pre-wrap text-sm leading-relaxed">
+              {summary || '请开始查询或生成总结。'}
+            </div>
+          )}
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h2 className="font-semibold text-gray-700 mb-3">功能操作</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => handleGenerateSummary()} className="flex items-center justify-center p-3 bg-blue-100 text-blue-700 rounded-lg space-x-2 hover:bg-blue-200 transition-colors disabled:opacity-50" disabled={isLoading}>
-              <DocumentIcon />
+        <div className="divider">
+          <span className="text-xs text-gray-400">快速操作</span>
+        </div>
+
+        {/* Action Buttons Card */}
+        <div className="card">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleGenerateSummary()}
+              className="btn-primary flex items-center justify-center space-x-2"
+              disabled={isLoading}
+            >
+              <DocumentIcon className="w-5 h-5" />
               <span>AI 总结</span>
             </button>
-             <button onClick={handleExportPdf} className="flex items-center justify-center p-3 bg-green-100 text-green-700 rounded-lg space-x-2 hover:bg-green-200 transition-colors">
-              <PdfIcon />
-              <span>导出PDF</span>
+            <button
+              onClick={handleExportPdf}
+              className="btn-accent flex items-center justify-center space-x-2"
+            >
+              <PdfIcon className="w-5 h-5" />
+              <span>导出 PDF</span>
             </button>
           </div>
         </div>
