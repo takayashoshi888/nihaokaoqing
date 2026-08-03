@@ -17,14 +17,14 @@ const BottomNav: React.FC<BottomNavProps> = ({ activePage, setActivePage }) => {
 
   return (
     <footer
-      className="fixed bottom-0 left-0 right-0 backdrop-blur-md border-t z-20"
+      className="app-bottom-nav fixed bottom-0 left-0 right-0 backdrop-blur-md border-t z-20"
       style={{
         backgroundColor: 'var(--theme-header-bg, rgba(255,255,255,0.9))',
         borderColor: 'var(--theme-border)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <nav className="flex justify-around" style={{ minHeight: '56px' }}>
+      <nav className="flex justify-around max-w-[var(--app-max-width)] mx-auto w-full" style={{ minHeight: '56px' }}>
         {navItems.map((item) => {
           const isActive = item.page === 'home' ? (activePage === 'home' || activePage === 'management' || activePage === 'siteSettings') : activePage === item.page;
 

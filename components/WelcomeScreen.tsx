@@ -21,13 +21,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onFinish }) => {
   };
 
   return (
-    <div className={`flex items-center justify-center h-screen text-white relative transition-opacity duration-500 ease-in-out ${isFading ? 'opacity-0' : 'opacity-100'}`}
+    <div className={`flex items-center justify-center min-h-[100dvh] min-h-screen text-white relative transition-opacity duration-500 ease-in-out overflow-hidden ${isFading ? 'opacity-0' : 'opacity-100'}`}
       style={{
         background: 'linear-gradient(135deg, var(--theme-primary-900), var(--theme-primary-700), var(--theme-primary-600))',
       }}>
-      <div className="text-center animate-fade-in-out">
-        <h1 className="text-5xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>欢迎您, 老板</h1>
-        <p className="text-xl text-blue-100" style={{ fontFamily: "'Open Sans', sans-serif" }}>现场考勤管理系统</p>
+      <div className="text-center animate-fade-in-out px-6">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>欢迎您, 老板</h1>
+        <p className="text-lg sm:text-xl text-blue-100" style={{ fontFamily: "'Open Sans', sans-serif" }}>现场考勤管理系统</p>
       </div>
       <button
         onClick={handleSkip}

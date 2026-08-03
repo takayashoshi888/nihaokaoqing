@@ -77,11 +77,11 @@ const App = () => {
     }
   };
 
-  if (showWelcome) {
-    return <WelcomeScreen onFinish={() => setShowWelcome(false)} />;
-  }
-
   const renderPage = () => {
+    if (showWelcome) {
+      return <WelcomeScreen onFinish={() => setShowWelcome(false)} />;
+    }
+
     if (!userData || activePage === 'login') {
       return <LoginPage onLogin={handleLogin} onViewData={handleViewData} savedUserData={userData} />;
     }
@@ -115,9 +115,11 @@ const App = () => {
   };
 
   return (
-    <div className="bg-surface min-h-screen font-body">
-      <div key={activePage} className="page-transition">
-        {renderPage()}
+    <div className="app-viewport font-body">
+      <div className="app-shell">
+        <div key={showWelcome ? 'welcome' : activePage} className="page-transition">
+          {renderPage()}
+        </div>
       </div>
     </div>
   );
